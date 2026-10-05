@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>太阳神车队 · 钻透月亮</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', 'Consolas', 'SF Mono', monospace;
+    }
+
+    body {
+      background-color: #050505;
+      color: #e0e0e0;
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      letter-spacing: 0.3px;
+    }
+
+    .system {
+      width: 100%;
+      max-width: 1440px;
+      background: #0a0a0a;
+      border: 1px solid #2a2a2a;
+      box-shadow: 0 0 20px rgba(180, 20, 20, 0.2);
+      padding: 20px 24px 24px;
+      position: relative;
+      min-height: 650px;
+    }
+
+    .system::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #8b0000, #b22222, #8b0000);
+    }
+
+    h1, h2, h3, h4, p, span, div, label, input, button {
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    /* ===== 加载动画 ===== */
+    .page-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #050505;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .page-loader.active {
+      display: flex;
+    }
+
+    .page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-logo {
+      color: #b22222;
+      letter-spacing: 8px;
+      font-size: 16px;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #3a1a1a;
+      padding-bottom: 10px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .loader-bar-wrap {
+      width: 260px;
+      height: 4px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loader-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #8b0000, #b22222);
+      animation: loadBar 2.2s ease-in-out forwards;
+    }
+
+    @keyframes loadBar {
+      0% { width: 0%; }
+      20% { width: 15%; }
+      50% { width: 48%; }
+      80% { width: 82%; }
+      100% { width: 100%; }
+    }
+
+    .loader-percent {
+      margin-top: 12px;
+      color: #888;
+      font-size: 11px;
+      letter-spacing: 3px;
+    }
+
+    /* 密码输入层 */
+    .auth-layer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 500px;
+      background: #070707;
+      border: 1px solid #2f2f2f;
+      padding: 40px 20px;
+    }
+
+    .auth-title {
+      color: #b22222;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #3a1a1a;
+      padding-bottom: 8px;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .auth-input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 280px;
+    }
+
+    .auth-input-group input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #3a3a3a;
+      color: #f0f0f0;
+      padding: 10px 14px;
+      font-size: 12px;
+      letter-spacing: 6px;
+      text-align: center;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    .auth-input-group input:focus {
+      border-color: #b22222;
+      box-shadow: 0 0 8px rgba(178, 34, 34, 0.4);
+    }
+
+    .auth-btn {
+      background: #111;
+      border: 1px solid #8b0000;
+      color: #e0e0e0;
+      padding: 10px 30px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 600;
+    }
+
+    .auth-btn:hover {
+      background: #1a0a0a;
+      border-color: #b22222;
+      color: #fff;
+    }
+
+    .auth-error {
+      color: #b22222;
+      margin-top: 8px;
+      height: 16px;
+      font-size: 11px;
+    }
+
+    /* 主界面 */
+    .main-interface {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      gap: 16px;
+    }
+
+    /* 状态栏 */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0d0d0d;
+      border: 1px solid #2c2c2c;
+      padding: 10px 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .ip-loader {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .loader-ring {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #2a2a2a;
+      border-top: 2px solid #b22222;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .ip-text {
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    .ip-text .red {
+      color: #b22222;
+      font-weight: 600;
+    }
+
+    .account-info {
+      display: flex;
+      gap: 20px;
+      color: #aaa;
+    }
+
+    .account-info span {
+      color: #b22222;
+    }
+
+    /* 标签页导航 */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #2a2a2a;
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: #7a7a7a;
+      padding: 8px 20px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 10px;
+      transition: 0.2s;
+      position: relative;
+      top: 1px;
+    }
+
+    .tab-btn:hover {
+      color: #ccc;
+      background: #111;
+    }
+
+    .tab-btn.active {
+      color: #e0e0e0;
+      background: #0f0f0f;
+      border-color: #2a2a2a #2a2a2a #0f0f0f #2a2a2a;
+      border-top: 2px solid #b22222;
+      font-weight: 600;
+    }
+
+    /* 内容面板 */
+    .panel {
+      background: #0b0b0b;
+      border: 1px solid #242424;
+      padding: 20px 18px;
+      min-height: 420px;
+    }
+
+    .panel-content {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-content.active {
+      display: flex;
+    }
+
+    /* ===== 雷达图 ===== */
+    .radar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .radar-card {
+      flex: 1 1 300px;
+      background: #0e0e0e;
+      border: 1px solid #2e2e2e;
+      padding: 16px;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .radar-card:nth-child(1) { animation-delay: 0.1s; }
+    .radar-card:nth-child(2) { animation-delay: 0.25s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .radar-title {
+      color: #b22222;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border-left: 3px solid #b22222;
+      padding-left: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .radar-chart-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .radar-svg {
+      width: 100%;
+      max-width: 260px;
+      height: auto;
+      overflow: visible;
+    }
+
+    .radar-poly {
+      fill: rgba(178, 34, 34, 0.15);
+      stroke: #b22222;
+      stroke-width: 1.8;
+      stroke-linejoin: round;
+      transition: 0.3s;
+      animation: radarExpand 0.9s ease-out forwards;
+      transform-origin: center;
+      transform: scale(0);
+    }
+
+    @keyframes radarExpand {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .radar-grid-line {
+      stroke: #2a2a2a;
+      stroke-width: 0.8;
+      fill: none;
+    }
+
+    .radar-axis {
+      stroke: #333;
+      stroke-width: 0.8;
+    }
+
+    .radar-label {
+      fill: #888;
+      font-size: 8px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #1e1e1e;
+      padding-bottom: 3px;
+    }
+
+    .stat-label {
+      color: #9a9a9a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-value {
+      color: #ddd;
+      font-weight: 600;
+    }
+
+    .stat-value.highlight {
+      color: #b22222;
+    }
+
+    .analysis-block {
+      margin-top: 16px;
+      border-top: 1px solid #232323;
+      padding-top: 12px;
+      color: #aaa;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .analysis-block strong {
+      color: #b22222;
+      font-weight: 600;
+    }
+
+    .rating {
+      display: inline-block;
+      border: 1px solid #b22222;
+      color: #b22222;
+      padding: 2px 8px;
+      margin-left: 8px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* 生理心理指标 */
+    .bio-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 12px;
+    }
+
+    .bio-item {
+      background: #0a0a0a;
+      border: 1px solid #1e1e1e;
+      padding: 10px;
+    }
+
+    .bio-label {
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .bio-value {
+      color: #ddd;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .bio-value .unit {
+      color: #666;
+      font-size: 9px;
+      margin-left: 4px;
+    }
+
+    .bio-value.warning {
+      color: #b22222;
+    }
+
+    .bio-desc {
+      color: #666;
+      font-size: 9px;
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== 赛道模拟训练 ===== */
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .track-card {
+      background: #0e0e0e;
+      border: 1px solid #262626;
+      padding: 14px;
+    }
+
+    .track-name {
+      color: #b22222;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 1px solid #2a1a1a;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+
+    .track-map {
+      width: 100%;
+      height: 110px;
+      background: #0a0a0a;
+      border: 1px solid #1e1e1e;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .track-map svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .track-detail {
+      color: #aaa;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .track-result {
+      color: #ddd;
+      margin-top: 8px;
+      border-left: 2px solid #b22222;
+      padding-left: 8px;
+    }
+
+    .track-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 10px;
+      color: #777;
+    }
+
+    .track-stats span {
+      background: #131313;
+      padding: 2px 8px;
+      border: 1px solid #222;
+    }
+
+    /* 温湿度分析 */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 10px;
+    }
+
+    .weather-item {
+      background: #0a0a0a;
+      border: 1px solid #1a1a1a;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .weather-label {
+      color: #666;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .weather-value {
+      color: #ddd;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .weather-value.red {
+      color: #b22222;
+    }
+
+    /* ===== 车身情况 ===== */
+    .car-spec {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .car-item {
+      background: #0e0e0e;
+      border: 1px solid #2a2a2a;
+      padding: 14px;
+    }
+
+    .car-item .label {
+      color: #b22222;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #1e1e1e;
+      padding-bottom: 4px;
+      font-size: 11px;
+    }
+
+    .car-item .value {
+      color: #ccc;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .car-item .value .spec-key {
+      color: #888;
+    }
+
+    .car-item .value .spec-val {
+      color: #ddd;
+      font-weight: 500;
+    }
+
+    .car-item .value .spec-val.red {
+      color: #b22222;
+    }
+
+    /* 零件寿命环 */
+    .life-ring-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 12px;
+    }
+
+    .life-ring {
+      flex: 1 1 80px;
+      text-align: center;
+    }
+
+    .life-ring svg {
+      width: 60px;
+      height: 60px;
+    }
+
+    .life-ring .ring-label {
+      color: #888;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: #1a1a1a;
+      stroke-width: 4;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke: #b22222;
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dasharray 0.6s ease;
+    }
+
+    .ring-text {
+      fill: #ddd;
+      font-size: 10px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: 600;
+    }
+
+    /* 温度条 */
+    .temp-bar-wrap {
+      margin-top: 10px;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 10px;
+    }
+
+    .temp-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .temp-label {
+      color: #888;
+      font-size: 10px;
+      min-width: 80px;
+      text-transform: uppercase;
+    }
+
+    .temp-bar {
+      flex: 1;
+      height: 6px;
+      background: #1a1a1a;
+      border: 1px solid #222;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .temp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a1a1a, #b22222);
+      transition: width 0.4s;
+    }
+
+    .temp-fill.warning {
+      background: linear-gradient(90deg, #b22222, #ff3333);
+    }
+
+    .temp-val {
+      color: #ddd;
+      font-size: 10px;
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* 通讯 */
+    .comm-log {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      padding: 12px;
+      font-size: 11px;
+      color: #b0b0b0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .comm-line {
+      border-bottom: 1px solid #1a1a1a;
+      padding: 6px 0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .comm-time {
+      color: #b22222;
+      min-width: 70px;
+    }
+
+    .comm-sender {
+      color: #ddd;
+      min-width: 80px;
+    }
+
+    .comm-section {
+      color: #b22222;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 14px 0 8px;
+      border-bottom: 1px solid #2a1a1a;
+      padding-bottom: 4px;
+      font-size: 10px;
+    }
+
+    /* ===== 人员编制 ===== */
+    .roster-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #2a1a1a;
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .roster-header .holding-label {
+      color: #b22222;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border: 1px solid #b22222;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .roster-header .holding-desc {
+      color: #888;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .person-card {
+      background: #0e0e0e;
+      border-left: 3px solid #b22222;
+      padding: 12px;
+      border-top: 1px solid #1e1e1e;
+      border-right: 1px solid #1e1e1e;
+      border-bottom: 1px solid #1e1e1e;
+    }
+
+    .person-name {
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .person-role {
+      color: #b22222;
+      margin: 4px 0 6px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .person-detail {
+      color: #888;
+      font-size: 10px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 12px;
+      color: #6a6a6a;
+      letter-spacing: 1px;
+      text-align: right;
+    }
+
+    .footer-note span {
+      color: #b22222;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      background: #0a0a0a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3a1a1a;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 加载动画 -->
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-logo">SUN CHARIOT · SYSTEM</div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar"></div>
+    </div>
+    <div class="loader-percent" id="loaderPercent">LOADING 0%</div>
+  </div>
+
+  <div class="system">
+    <!-- 密码验证层 -->
+    <div id="authLayer" class="auth-layer">
+      <div class="auth-title">SUN CHARIOT · ACCESS</div>
+      <div class="auth-input-group">
+        <input type="password" id="passwordInput" placeholder="ENTER PASSCODE" maxlength="10" autocomplete="off">
+        <button class="auth-btn" id="authBtn">验证</button>
+        <div class="auth-error" id="authError"></div>
+      </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainInterface" class="main-interface">
+      <!-- 状态栏 -->
+      <div class="status-bar">
+        <div class="ip-loader">
+          <div class="loader-ring"></div>
+          <div class="ip-text">VERIFYING IP · <span class="red" id="ipAddress">10.27.62.1</span> · SECURE</div>
+        </div>
+        <div class="account-info">
+          <div>ACCOUNT: <span>Z0627M</span></div>
+          <div>LEVEL: <span>MAXIMUM</span></div>
+        </div>
+      </div>
+
+      <!-- 标签页 -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab1">选手分析</button>
+        <button class="tab-btn" data-tab="tab2">赛道模拟训练</button>
+        <button class="tab-btn" data-tab="tab3">车身情况</button>
+        <button class="tab-btn" data-tab="tab4">战术通信</button>
+        <button class="tab-btn" data-tab="tab5">人员编制</button>
+      </div>
+
+      <!-- 面板内容 -->
+      <div class="panel">
+        <!-- 标签1：选手分析（含生理心理） -->
+        <div id="tab1" class="panel-content active">
+          <div class="radar-grid">
+            <!-- 宗岩雷 -->
+            <div class="radar-card">
+              <div class="radar-title">ZONG YANLEI · DRIVER</div>
+              <div class="radar-chart-wrap">
+                <svg class="radar-svg" viewBox="0 0 220 220" preserveAspectRatio="xMidYMid meet">
+                  <g id="radarGridZong"></g>
+                  <g id="radarAxesZong"></g>
+                  <polygon class="radar-poly" id="radarPolyZong" points="" />
+                  <g id="radarLabelsZong"></g>
+                </svg>
+              </div>
+              <div class="stat-row"><span class="stat-label">力量 POWER</span><span class="stat-value">97</span></div>
+              <div class="stat-row"><span class="stat-label">速度 SPEED</span><span class="stat-value highlight">99</span></div>
+              <div class="stat-row"><span class="stat-label">爆发力 EXPLOSIVENESS</span><span class="stat-value">94</span></div>
+              <div class="stat-row"><span class="stat-label">技巧 TECHNIQUE</span><span class="stat-value highlight">100</span></div>
+              <div class="stat-row"><span class="stat-label">语言表达 VERBAL</span><span class="stat-value">23</span></div>
+              <div class="stat-row"><span class="stat-label">直觉 INTUITION</span><span class="stat-value">93</span></div>
+              <div class="stat-row"><span class="stat-label">执行 EXECUTION</span><span class="stat-value">76</span></div>
+
+              <!-- 生理心理指标 -->
+              <div class="bio-grid">
+                <div class="bio-item">
+                  <div class="bio-label">静息心率 RESTING HR</div>
+                  <div class="bio-value">52<span class="unit">BPM</span></div>
+                  <div class="bio-desc">低于常人 · 优秀心肺</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">最大摄氧量 VO2 MAX</div>
+                  <div class="bio-value">68<span class="unit">ML/KG</span></div>
+                  <div class="bio-desc">职业车手顶尖水平</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">反应时 REACTION</div>
+                  <div class="bio-value">168<span class="unit">MS</span></div>
+                  <div class="bio-desc">视觉刺激反应</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">心理韧性 RESILIENCE</div>
+                  <div class="bio-value">94<span class="unit">/100</span></div>
+                  <div class="bio-desc">高压下表现稳定</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">专注度 FOCUS</div>
+                  <div class="bio-value">91<span class="unit">/100</span></div>
+                  <div class="bio-desc">长时程注意力优异</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">压力指数 STRESS</div>
+                  <div class="bio-value warning">38<span class="unit">/100</span></div>
+                  <div class="bio-desc">赛前轻度紧张 · 可控</div>
+                </div>
+              </div>
+
+              <div class="analysis-block">
+                <strong>分析 ANALYSIS:</strong> 纯粹的速度机器，技巧达到理论峰值。语言表达极低，但直觉与执行力的组合使其在混乱中仍能保持路线。生理指标顶尖，静息心率52，最大摄氧量68，属于耐力型+爆发型复合体质。<br>
+                <strong>心理 PSYCH:</strong> 高压环境下心理韧性极强，专注度91，压力指数仅38，赛前焦虑水平低。语言表达23，但与姜满形成非语言默契。<br>
+                <strong>评级 RATING:</strong> <span class="rating">S+</span> 核心王牌
+              </div>
+            </div>
+
+            <!-- 姜满 -->
+            <div class="radar-card">
+              <div class="radar-title">JIANG MAN · CO-DRIVER</div>
+              <div class="radar-chart-wrap">
+                <svg class="radar-svg" viewBox="0 0 220 220" preserveAspectRatio="xMidYMid meet">
+                  <g id="radarGridJiang"></g>
+                  <g id="radarAxesJiang"></g>
+                  <polygon class="radar-poly" id="radarPolyJiang" points="" />
+                  <g id="radarLabelsJiang"></g>
+                </svg>
+              </div>
+              <div class="stat-row"><span class="stat-label">记忆 MEMORY</span><span class="stat-value highlight">100</span></div>
+              <div class="stat-row"><span class="stat-label">反应 REACTION</span><span class="stat-value">98</span></div>
+              <div class="stat-row"><span class="stat-label">分析 ANALYSIS</span><span class="stat-value">95</span></div>
+              <div class="stat-row"><span class="stat-label">观察 OBSERVATION</span><span class="stat-value">92</span></div>
+              <div class="stat-row"><span class="stat-label">谋略 STRATEGY</span><span class="stat-value highlight">99</span></div>
+              <div class="stat-row"><span class="stat-label">应变力 ADAPTABILITY</span><span class="stat-value">89</span></div>
+              <div class="stat-row"><span class="stat-label">耐力 STAMINA</span><span class="stat-value">23</span></div>
+
+              <div class="bio-grid">
+                <div class="bio-item">
+                  <div class="bio-label">静息心率 RESTING HR</div>
+                  <div class="bio-value">61<span class="unit">BPM</span></div>
+                  <div class="bio-desc">正常范围 · 偏紧张</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">最大摄氧量 VO2 MAX</div>
+                  <div class="bio-value warning">48<span class="unit">ML/KG</span></div>
+                  <div class="bio-desc">偏低 · 需专项提升</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">反应时 REACTION</div>
+                  <div class="bio-value">152<span class="unit">MS</span></div>
+                  <div class="bio-desc">听觉刺激反应极快</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">心理韧性 RESILIENCE</div>
+                  <div class="bio-value">82<span class="unit">/100</span></div>
+                  <div class="bio-desc">赛末段易波动</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">专注度 FOCUS</div>
+                  <div class="bio-value highlight">97<span class="unit">/100</span></div>
+                  <div class="bio-desc">短时程聚焦极佳</div>
+                </div>
+                <div class="bio-item">
+                  <div class="bio-label">压力指数 STRESS</div>
+                  <div class="bio-value warning">62<span class="unit">/100</span></div>
+                  <div class="bio-desc">赛前焦虑偏高 · 需干预</div>
+                </div>
+              </div>
+
+              <div class="analysis-block">
+                <strong>分析 ANALYSIS:</strong> 记忆容量与谋略堪称完美，但耐力极低，需依赖短程爆发与精准计算。与宗岩雷形成互补，弥补语言沟通短板。最大摄氧量48偏低，耐力23，生理上不适合长赛段。<br>
+                <strong>心理 PSYCH:</strong> 短时专注度97，但心理韧性82，压力指数62，赛末段易受干扰。反应时152ms极快，适合即时战术调整。<br>
+                <strong>评级 RATING:</strong> <span class="rating">S</span> 战术大脑
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 标签2：赛道模拟训练（含温湿度） -->
+        <div id="tab2" class="panel-content">
+          <div class="track-grid">
+            <!-- 内部训练场 -->
+            <div class="track-card">
+              <div class="track-name">SUN CHARIOT · INTERNAL</div>
+              <div class="track-map">
+                <svg viewBox="0 0 200 100">
+                  <path d="M 20,50 Q 40,10 80,20 Q 120,30 160,25 Q 180,22 185,40 Q 190,65 170,75 Q 140,90 100,85 Q 60,80 35,75 Q 15,70 20,50 Z" fill="none" stroke="#b22222" stroke-width="2.5" />
+                  <circle cx="20" cy="50" r="2" fill="#b22222" />
+                  <text x="12" y="46" fill="#888" font-size="6">S/F</text>
+                </svg>
+              </div>
+              <div class="track-detail">LENGTH: 4.2 KM · CORNERS: 14</div>
+              <div class="track-detail">SURFACE: HIGH-GRIP ASPHALT</div>
+              <div class="track-result">BEST LAP: 01:18.427 · 宗岩雷 / 姜满</div>
+              <div class="track-stats">
+                <span>极速 312 km/h</span>
+                <span>平均速度 198 km/h</span>
+                <span>全油门 68%</span>
+              </div>
+              <div class="weather-grid">
+                <div class="weather-item"><div class="weather-label">气温</div><div class="weather-value">28°C</div></div>
+                <div class="weather-item"><div class="weather-label">湿度</div><div class="weather-value">45%</div></div>
+                <div class="weather-item"><div class="weather-label">风速</div><div class="weather-value">2.1 m/s</div></div>
+                <div class="weather-item"><div class="weather-label">地表温度</div><div class="weather-value red">42°C</div></div>
+              </div>
+            </div>
+
+            <!-- 白玉京站 -->
+            <div class="track-card">
+              <div class="track-name">BAIYUJING STATION</div>
+              <div class="track-map">
+                <svg viewBox="0 0 200 100">
+                  <path d="M 15,55 L 50,15 L 100,30 L 130,10 L 170,35 L 185,70 L 140,85 L 90,80 L 45,90 L 15,55 Z" fill="none" stroke="#b22222" stroke-width="2.5" />
+                  <circle cx="15" cy="55" r="2" fill="#b22222" />
+                  <text x="8" y="51" fill="#888" font-size="6">S/F</text>
+                </svg>
+              </div>
+              <div class="track-detail">LENGTH: 5.6 KM · CORNERS: 19</div>
+              <div class="track-detail">ELEVATION: 320M · MIXED</div>
+              <div class="track-result">BEST LAP: 01:42.118 · 轮胎损耗中等</div>
+              <div class="track-stats">
+                <span>极速 298 km/h</span>
+                <span>海拔落差 42m</span>
+                <span>重刹区 7处</span>
+              </div>
+              <div class="weather-grid">
+                <div class="weather-item"><div class="weather-label">气温</div><div class="weather-value">24°C</div></div>
+                <div class="weather-item"><div class="weather-label">湿度</div><div class="weather-value">62%</div></div>
+                <div class="weather-item"><div class="weather-label">风速</div><div class="weather-value">3.8 m/s</div></div>
+                <div class="weather-item"><div class="weather-label">地表温度</div><div class="weather-value">35°C</div></div>
+              </div>
+            </div>
+
+            <!-- 增城站 -->
+            <div class="track-card">
+              <div class="track-name">ZENGCHENG STATION</div>
+              <div class="track-map">
+                <svg viewBox="0 0 200 100">
+                  <path d="M 25,70 L 20,30 L 70,15 L 120,25 L 160,15 L 180,45 L 150,70 L 100,85 L 55,80 L 25,70 Z" fill="none" stroke="#b22222" stroke-width="2.5" />
+                  <circle cx="25" cy="70" r="2" fill="#b22222" />
+                  <text x="18" y="66" fill="#888" font-size="6">S/F</text>
+                </svg>
+              </div>
+              <div class="track-detail">LENGTH: 3.9 KM · CORNERS: 11</div>
+              <div class="track-detail">SURFACE: ABRASIVE</div>
+              <div class="track-result">BEST LAP: 01:09.542 · 刹车稳定性优异</div>
+              <div class="track-stats">
+                <span>极速 305 km/h</span>
+                <span>平均速度 202 km/h</span>
+                <span>轮胎磨损 高</span>
+              </div>
+              <div class="weather-grid">
+                <div class="weather-item"><div class="weather-label">气温</div><div class="weather-value red">33°C</div></div>
+                <div class="weather-item"><div class="weather-label">湿度</div><div class="weather-value">38%</div></div>
+                <div class="weather-item"><div class="weather-label">风速</div><div class="weather-value">1.2 m/s</div></div>
+                <div class="weather-item"><div class="weather-label">地表温度</div><div class="weather-value red">51°C</div></div>
+              </div>
+            </div>
+
+            <!-- 樊桐分站 -->
+            <div class="track-card">
+              <div class="track-name">FANTONG BRANCH</div>
+              <div class="track-map">
+                <svg viewBox="0 0 200 100">
+                  <path d="M 30,50 C 20,20 60,10 90,20 C 120,30 150,15 170,35 C 190,55 175,80 150,85 C 120,90 80,95 50,85 C 30,78 35,60 30,50 Z" fill="none" stroke="#b22222" stroke-width="2.5" />
+                  <circle cx="30" cy="50" r="2" fill="#b22222" />
+                  <text x="22" y="46" fill="#888" font-size="6">S/F</text>
+                </svg>
+              </div>
+              <div class="track-detail">LENGTH: 6.1 KM · CORNERS: 23</div>
+              <div class="track-detail">MIXED SURFACE · BUMPY</div>
+              <div class="track-result">BEST LAP: 02:01.876 · 耐力消耗高</div>
+              <div class="track-stats">
+                <span>极速 288 km/h</span>
+                <span>颠簸路段 12处</span>
+                <span>姜满耐力 23</span>
+              </div>
+              <div class="weather-grid">
+                <div class="weather-item"><div class="weather-label">气温</div><div class="weather-value">19°C</div></div>
+                <div class="weather-item"><div class="weather-label">湿度</div><div class="weather-value red">78%</div></div>
+                <div class="weather-item"><div class="weather-label">风速</div><div class="weather-value">4.5 m/s</div></div>
+                <div class="weather-item"><div class="weather-label">地表温度</div><div class="weather-value">27°C</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-block" style="margin-top:8px;">
+            <strong>训练结果 TRAINING RESULT:</strong> 综合模拟完成，宗/姜组合在技术型赛道优势显著；长赛道需关注姜满耐力瓶颈。增城站高温51°C地表，轮胎磨损加剧；樊桐分站高湿78%，需调整胎压与刹车冷却。建议增加短程冲刺训练与湿热适应性训练。
+          </div>
+        </div>
+
+        <!-- 标签3：车身情况（丰富） -->
+        <div id="tab3" class="panel-content">
+          <div class="car-spec">
+            <div class="car-item">
+              <div class="label">CHASSIS 底盘</div>
+              <div class="value"><span class="spec-key">MODEL</span><span class="spec-val">SUN-CHARIOT MK-VII</span></div>
+              <div class="value"><span class="spec-key">MATERIAL</span><span class="spec-val">碳钛合金单体壳</span></div>
+              <div class="value"><span class="spec-key">TORSIONAL RIGIDITY</span><span class="spec-val red">42,000 NM/DEG</span></div>
+              <div class="value"><span class="spec-key">WEIGHT</span><span class="spec-val">798 KG</span></div>
+              <div class="value"><span class="spec-key">FUEL CAPACITY</span><span class="spec-val">110 KG</span></div>
+              <!-- 零件寿命环 -->
+              <div class="life-ring-wrap">
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="15" />
+                    <text class="ring-text" x="30" y="30">90%</text>
+                  </svg>
+                  <div class="ring-label">单体壳</div>
+                </div>
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="45" />
+                    <text class="ring-text" x="30" y="30">70%</text>
+                  </svg>
+                  <div class="ring-label">悬挂</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="car-item">
+              <div class="label">POWER UNIT 动力</div>
+              <div class="value"><span class="spec-key">TYPE</span><span class="spec-val">HYBRID V6 · 1.6L</span></div>
+              <div class="value"><span class="spec-key">MAX POWER</span><span class="spec-val red">980 HP</span></div>
+              <div class="value"><span class="spec-key">MAX RPM</span><span class="spec-val">15,000 RPM</span></div>
+              <div class="value"><span class="spec-key">ENERGY RECOVERY</span><span class="spec-val">180 KW</span></div>
+              <div class="value"><span class="spec-key">FUEL CONSUMPTION</span><span class="spec-val">1.2 L/LAP</span></div>
+              <div class="life-ring-wrap">
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="30" />
+                    <text class="ring-text" x="30" y="30">80%</text>
+                  </svg>
+                  <div class="ring-label">内燃机</div>
+                </div>
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="60" />
+                    <text class="ring-text" x="30" y="30">60%</text>
+                  </svg>
+                  <div class="ring-label">MGU-K</div>
+                </div>
+              </div>
+              <!-- 温度条 -->
+              <div class="temp-bar-wrap">
+                <div class="temp-row">
+                  <span class="temp-label">水温 COOLANT</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:72%"></div></div>
+                  <span class="temp-val">108°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">油温 OIL</span>
+                  <div class="temp-bar"><div class="temp-fill warning" style="width:88%"></div></div>
+                  <span class="temp-val">132°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">涡轮 TURBO</span>
+                  <div class="temp-bar"><div class="temp-fill warning" style="width:92%"></div></div>
+                  <span class="temp-val">945°C</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="car-item">
+              <div class="label">AERO 空气动力学</div>
+              <div class="value"><span class="spec-key">FRONT WING</span><span class="spec-val">DUAL PLANE · ACTIVE FLAP</span></div>
+              <div class="value"><span class="spec-key">REAR WING</span><span class="spec-val">DRS ENABLED</span></div>
+              <div class="value"><span class="spec-key">DOWNFORCE</span><span class="spec-val red">1,850 KG @ 250 KM/H</span></div>
+              <div class="value"><span class="spec-key">DRAG</span><span class="spec-val">0.82 CD</span></div>
+              <div class="value"><span class="spec-key">DIFFUSER</span><span class="spec-val">DOUBLE DECK</span></div>
+              <div class="life-ring-wrap">
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="15" />
+                    <text class="ring-text" x="30" y="30">90%</text>
+                  </svg>
+                  <div class="ring-label">前翼</div>
+                </div>
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="45" />
+                    <text class="ring-text" x="30" y="30">70%</text>
+                  </svg>
+                  <div class="ring-label">后翼</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="car-item">
+              <div class="label">TYRES 轮胎</div>
+              <div class="value"><span class="spec-key">COMPOUNDS</span><span class="spec-val">SOFT / MEDIUM / HARD</span></div>
+              <div class="value"><span class="spec-key">FRONT PRESSURE</span><span class="spec-val">22.5 PSI</span></div>
+              <div class="value"><span class="spec-key">REAR PRESSURE</span><span class="spec-val">21.0 PSI</span></div>
+              <div class="value"><span class="spec-key">CAMBER</span><span class="spec-val">-3.2° FRONT / -2.0° REAR</span></div>
+              <div class="value"><span class="spec-key">WEAR RATE</span><span class="spec-val red">MEDIUM-HIGH</span></div>
+              <!-- 轮胎温度 -->
+              <div class="temp-bar-wrap">
+                <div class="temp-row">
+                  <span class="temp-label">前左 FL</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:78%"></div></div>
+                  <span class="temp-val">98°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">前右 FR</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:82%"></div></div>
+                  <span class="temp-val">102°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">后左 RL</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:74%"></div></div>
+                  <span class="temp-val">94°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">后右 RR</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:76%"></div></div>
+                  <span class="temp-val">96°C</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="car-item">
+              <div class="label">SUSPENSION 悬挂</div>
+              <div class="value"><span class="spec-key">FRONT</span><span class="spec-val">PUSHROD · DOUBLE WISHBONE</span></div>
+              <div class="value"><span class="spec-key">REAR</span><span class="spec-val">PULLROD · DOUBLE WISHBONE</span></div>
+              <div class="value"><span class="spec-key">DAMPERS</span><span class="spec-val">ADAPTIVE · 4-WAY</span></div>
+              <div class="value"><span class="spec-key">RIDE HEIGHT</span><span class="spec-val">F: 32MM / R: 45MM</span></div>
+              <div class="life-ring-wrap">
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="52" />
+                    <text class="ring-text" x="30" y="30">65%</text>
+                  </svg>
+                  <div class="ring-label">减震器</div>
+                </div>
+                <div class="life-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="24" />
+                    <circle class="ring-fill" cx="30" cy="30" r="24" stroke-dasharray="150.8 150.8" stroke-dashoffset="22" />
+                    <text class="ring-text" x="30" y="30">85%</text>
+                  </svg>
+                  <div class="ring-label">推杆</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="car-item">
+              <div class="label">BRAKES 制动</div>
+              <div class="value"><span class="spec-key">TYPE</span><span class="spec-val">CARBON-CERAMIC</span></div>
+              <div class="value"><span class="spec-key">DISCS</span><span class="spec-val">FRONT 330MM / REAR 305MM</span></div>
+              <div class="value"><span class="spec-key">COOLING</span><span class="spec-val">DUCTED · ACTIVE</span></div>
+              <div class="value"><span class="spec-key">BIAS</span><span class="spec-val">58% FRONT</span></div>
+              <!-- 刹车温度 -->
+              <div class="temp-bar-wrap">
+                <div class="temp-row">
+                  <span class="temp-label">前刹车 FL</span>
+                  <div class="temp-bar"><div class="temp-fill warning" style="width:86%"></div></div>
+                  <span class="temp-val">780°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">前刹车 FR</span>
+                  <div class="temp-bar"><div class="temp-fill warning" style="width:90%"></div></div>
+                  <span class="temp-val">810°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">后刹车 RL</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:68%"></div></div>
+                  <span class="temp-val">620°C</span>
+                </div>
+                <div class="temp-row">
+                  <span class="temp-label">后刹车 RR</span>
+                  <div class="temp-bar"><div class="temp-fill" style="width:70%"></div></div>
+                  <span class="temp-val">640°C</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="analysis-block">
+            <strong>状态 STATUS:</strong> 车身完整度 98% · 变速箱序列式 · 下压力设定适合高速弯。宗岩雷反馈转向精准，姜满标记悬挂微调。前翼角度调整 -0.5°，后轮倾角 +0.2°。<br>
+            <strong>温度 THERMAL:</strong> 油温132°C偏高，涡轮945°C接近阈值。前刹车810°C需加强冷却。轮胎温度整体正常，前右102°C略高。<br>
+            <strong>零件寿命 LIFE:</strong> 单体壳90%，内燃机80%，MGU-K 60%，减震器65%。建议赛后更换MGU-K与减震器。<br>
+            <strong>建议 RECOMMENDATION:</strong> 针对增城站增加刹车冷却效率，樊桐分站提升悬挂行程。涡轮温度需监控。
+          </div>
+        </div>
+
+        <!-- 标签4：战术通信（多时段） -->
+        <div id="tab4" class="panel-content">
+          <div class="comm-log">
+            <!-- 赛前 -->
+            <div class="comm-section">■ 赛前 · PRE-RACE · 13:30</div>
+            <div class="comm-line"><span class="comm-time">[13:30:12]</span><span class="comm-sender">NING</span><span>“所有系统检查完毕，宗岩雷确认座舱。” </span></div>
+            <div class="comm-line"><span class="comm-time">[13:30:18]</span><span class="comm-sender">ZONG</span><span>“座舱确认。刹车踏板行程正常。” </span></div>
+            <div class="comm-line"><span class="comm-time">[13:30:24]</span><span class="comm-sender">JIANG</span><span>“战术板已加载，白玉京站第7-9弯有新碎片标记。” </span></div>
+            <div class="comm-line"><span class="comm-time">[13:30:31]</span><span class="comm-sender">PIT</span><span>“胎压已调至22.5/21.0，油温预热中。” </span></div>
+
+            <!-- 第一时段 -->
+            <div class="comm-section">■ 第一时段 · STINT 1 · 14:00-14:25</div>
+            <div class="comm-line"><span class="comm-time">[14:00:05]</span><span class="comm-sender">PIT</span><span>“绿灯，绿灯。模式1，能量回收全开。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:00:12]</span><span class="comm-sender">ZONG</span><span>“起步正常，轮胎温度在上升。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:02:30]</span><span class="comm-sender">JIANG</span><span>“后方谭允美在P4，差距2.1秒。以悠在P5。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:05:18]</span><span class="comm-sender">ZONG</span><span>“前轮有点滑，第3弯转向不足。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:05:25]</span><span class="comm-sender">JIANG</span><span>“收到，调整前翼-0.5°，下一圈执行。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:08:42]</span><span class="comm-sender">PIT</span><span>“油温132°C，涡轮945°C，注意散热。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:12:10]</span><span class="comm-sender">JIANG</span><span>“第14弯有油渍，走内线，慢进快出。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:15:33]</span><span class="comm-sender">ZONG</span><span>“刹车温度810°C，前刹车有点软。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:15:40]</span><span class="comm-sender">PIT</span><span>“调整刹车平衡前移2%，冷却风道全开。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:20:08]</span><span class="comm-sender">JIANG</span><span>“轮胎磨损中等，左前有点起泡。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:22:01]</span><span class="comm-sender">ZONG</span><span>“轮胎温度偏低，第二计时段推一点。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:22:05]</span><span class="comm-sender">JIANG</span><span>“收到，后方干净。记忆弯道7-9有碎片，走内线。” </span></div>
+
+            <!-- 第二时段 -->
+            <div class="comm-section">■ 第二时段 · STINT 2 · 14:25-14:50</div>
+            <div class="comm-line"><span class="comm-time">[14:25:00]</span><span class="comm-sender">PIT</span><span>“进站窗口开启，准备换胎。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:25:15]</span><span class="comm-sender">ZONG</span><span>“进站，确认。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:25:48]</span><span class="comm-sender">PIT</span><span>“换胎完成，中性胎，出站。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:27:30]</span><span class="comm-sender">JIANG</span><span>“新胎温度上升中，第5弯可以推进。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:30:12]</span><span class="comm-sender">ZONG</span><span>“感觉好多了，抓地力恢复。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:33:45]</span><span class="comm-sender">PIT</span><span>“谭允美进站，你现在P2，以悠P1。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:35:20]</span><span class="comm-sender">JIANG</span><span>“以悠在直道尾速很快，注意防守。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:38:08]</span><span class="comm-sender">ZONG</span><span>“收到，我会在弯道施压。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:42:33]</span><span class="comm-sender">JIANG</span><span>“姜满耐力余量48%，注意节奏。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:45:10]</span><span class="comm-sender">PIT</span><span>“油温130°C，稳定。涡轮938°C。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:48:22]</span><span class="comm-sender">ZONG</span><span>“后轮开始滑了，准备第三次进站。” </span></div>
+
+            <!-- 第三时段 -->
+            <div class="comm-section">■ 第三时段 · STINT 3 · 14:50-15:15</div>
+            <div class="comm-line"><span class="comm-time">[14:50:05]</span><span class="comm-sender">PIT</span><span>“进站，换硬胎，油量补满。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:50:42]</span><span class="comm-sender">PIT</span><span>“出站，P3。谭允美P2，以悠P1。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:53:18]</span><span class="comm-sender">JIANG</span><span>“硬胎温度上升慢，前两圈保守。” </span></div>
+            <div class="comm-line"><span class="comm-time">[14:56:30]</span><span class="comm-sender">ZONG</span><span>“明白，我在第7弯找机会。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:00:12]</span><span class="comm-sender">JIANG</span><span>“谭允美在第3弯失误，差距0.8秒。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:01:45]</span><span class="comm-sender">ZONG</span><span>“看到了，准备攻击。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:03:22]</span><span class="comm-sender">PIT</span><span>“刹车温度810°C，注意冷却。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:05:08]</span><span class="comm-sender">JIANG</span><span>“姜满耐力余量22%，需要管理。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:08:30]</span><span class="comm-sender">ZONG</span><span>“收到，我会减少不必要的转向。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:10:15]</span><span class="comm-sender">PIT</span><span>“最后一圈，模式7，全力推进。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:12:40]</span><span class="comm-sender">JIANG</span><span>“以悠轮胎严重退化，有机会。” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:14:02]</span><span class="comm-sender">ZONG</span><span>“最后一弯，我走内线！” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:14:55]</span><span class="comm-sender">PIT</span><span>“冲线！P1！漂亮！” </span></div>
+            <div class="comm-line"><span class="comm-time">[15:15:10]</span><span class="comm-sender">JIANG</span><span>“宗岩雷，完美执行。” </span></div>
+          </div>
+        </div>
+
+        <!-- 标签5：人员编制 -->
+        <div id="tab5" class="panel-content">
+          <div class="roster-header">
+            <span class="holding-label">宗式控股</span>
+            <span class="holding-desc">ZONG HOLDINGS · 全资运营</span>
+          </div>
+          <div class="roster-grid">
+            <div class="person-card">
+              <div class="person-name">ZONG YANLEI</div>
+              <div class="person-role">主力车手 DRIVER · NO.1</div>
+              <div class="person-detail">宗式控股 · 核心车手</div>
+            </div>
+            <div class="person-card">
+              <div class="person-name">JIANG MAN</div>
+              <div class="person-role">主力领航员 CO-DRIVER · NO.1</div>
+              <div class="person-detail">宗式控股 · 战术领航</div>
+            </div>
+            <div class="person-card">
+              <div class="person-name">TAN YUNMEI</div>
+              <div class="person-role">副车手 DRIVER · NO.2</div>
+              <div class="person-detail">副车组 · 第二车手</div>
+            </div>
+            <div class="person-card">
+              <div class="person-name">YI YOU</div>
+              <div class="person-role">副车领航 CO-DRIVER · NO.2</div>
+              <div class="person-detail">副车组 · 数据协同</div>
+            </div>
+            <div class="person-card">
+              <div class="person-name">MELANIE KA</div>
+              <div class="person-role">宣传总监 PROMOTION DIRECTOR</div>
+              <div class="person-detail">品牌运营 · 媒体关系</div>
+            </div>
+            <div class="person-card">
+              <div class="person-name">NING ZHICHU</div>
+              <div class="person-role">总负责人 TEAM PRINCIPAL</div>
+              <div class="person-detail">战略决策 · 全面管理</div>
+            </div>
+          </div>
+          <div class="footer-note">
+            <span>宗式控股</span> · SUN CHARIOT RACING · ALL SYSTEMS NOMINAL
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const pageLoader = document.getElementById('pageLoader');
+      const loaderPercent = document.getElementById('loaderPercent');
+      const authLayer = document.getElementById('authLayer');
+      const mainInterface = document.getElementById('mainInterface');
+      const passwordInput = document.getElementById('passwordInput');
+      const authBtn = document.getElementById('authBtn');
+      const authError = document.getElementById('authError');
+      const VALID_PASS = '0000';
+
+      let loaderInterval = null;
+
+      // 雷达图绘制
+      function drawRadarChart(config) {
+        const { svgPrefix, data } = config;
+        const gridGroup = document.getElementById(`radarGrid${svgPrefix}`);
+        const axesGroup = document.getElementById(`radarAxes${svgPrefix}`);
+        const labelsGroup = document.getElementById(`radarLabels${svgPrefix}`);
+        const polyEl = document.getElementById(`radarPoly${svgPrefix}`);
+        if (!gridGroup || !axesGroup || !labelsGroup || !polyEl) return;
+
+        gridGroup.innerHTML = '';
+        axesGroup.innerHTML = '';
+        labelsGroup.innerHTML = '';
+
+        const centerX = 110, centerY = 110, maxRadius = 75;
+        const numAxes = data.length;
+        const angleStep = (Math.PI * 2) / numAxes;
+
+        const layers = 5;
+        for (let l = 1; l <= layers; l++) {
+          const r = (maxRadius / layers) * l;
+          const points = [];
+          for (let i = 0; i < numAxes; i++) {
+            const angle = -Math.PI / 2 + i * angleStep;
+            const x = centerX + r * Math.cos(angle);
+            const y = centerY + r * Math.sin(angle);
+            points.push(`${x},${y}`);
+          }
+          const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          polygon.setAttribute('points', points.join(' '));
+          polygon.setAttribute('class', 'radar-grid-line');
+          gridGroup.appendChild(polygon);
+        }
+
+        for (let i = 0; i < numAxes; i++) {
+          const angle = -Math.PI / 2 + i * angleStep;
+          const x = centerX + maxRadius * Math.cos(angle);
+          const y = centerY + maxRadius * Math.sin(angle);
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', centerX);
+          line.setAttribute('y1', centerY);
+          line.setAttribute('x2', x);
+          line.setAttribute('y2', y);
+          line.setAttribute('class', 'radar-axis');
+          axesGroup.appendChild(line);
+        }
+
+        const points = [];
+        for (let i = 0; i < numAxes; i++) {
+          const value = data[i].value;
+          const max = data[i].max || 100;
+          const ratio = Math.min(value / max, 1);
+          const r = maxRadius * ratio;
+          const angle = -Math.PI / 2 + i * angleStep;
+          const x = centerX + r * Math.cos(angle);
+          const y = centerY + r * Math.sin(angle);
+          points.push(`${x},${y}`);
+        }
+        polyEl.setAttribute('points', points.join(' '));
+        polyEl.setAttribute('fill', 'rgba(178, 34, 34, 0.15)');
+        polyEl.setAttribute('stroke', '#b22222');
+
+        for (let i = 0; i < numAxes; i++) {
+          const angle = -Math.PI / 2 + i * angleStep;
+          const labelR = maxRadius + 18;
+          const x = centerX + labelR * Math.cos(angle);
+          const y = centerY + labelR * Math.sin(angle);
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', x);
+          text.setAttribute('y', y);
+          text.setAttribute('class', 'radar-label');
+          text.setAttribute('fill', '#888');
+          text.setAttribute('font-size', '8');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'middle');
+          const shortLabel = data[i].label.split(' ')[0] || data[i].label;
+          text.textContent = shortLabel;
+          labelsGroup.appendChild(text);
+        }
+      }
+
+      function initRadarCharts() {
+        const zongData = [
+          { label: '力量', value: 97, max: 100 },
+          { label: '速度', value: 99, max: 100 },
+          { label: '爆发力', value: 94, max: 100 },
+          { label: '技巧', value: 100, max: 100 },
+          { label: '语言', value: 23, max: 100 },
+          { label: '直觉', value: 93, max: 100 },
+          { label: '执行', value: 76, max: 100 },
+        ];
+        const jiangData = [
+          { label: '记忆', value: 100, max: 100 },
+          { label: '反应', value: 98, max: 100 },
+          { label: '分析', value: 95, max: 100 },
+          { label: '观察', value: 92, max: 100 },
+          { label: '谋略', value: 99, max: 100 },
+          { label: '应变', value: 89, max: 100 },
+          { label: '耐力', value: 23, max: 100 },
+        ];
+        drawRadarChart({ svgPrefix: 'Zong', data: zongData });
+        drawRadarChart({ svgPrefix: 'Jiang', data: jiangData });
+      }
+
+      // 标签切换
+      function initTabs() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const panels = {
+          tab1: document.getElementById('tab1'),
+          tab2: document.getElementById('tab2'),
+          tab3: document.getElementById('tab3'),
+          tab4: document.getElementById('tab4'),
+          tab5: document.getElementById('tab5')
+        };
+
+        tabBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            Object.values(panels).forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            if (panels[tabId]) panels[tabId].classList.add('active');
+            if (tabId === 'tab1') {
+              const polys = document.querySelectorAll('.radar-poly');
+              polys.forEach(p => {
+                p.style.animation = 'none';
+                p.offsetHeight;
+                p.style.animation = 'radarExpand 0.9s ease-out forwards';
+              });
+            }
+          });
+        });
+      }
+
+      // IP 动画
+      function startIpAnimation() {
+        const ipEl = document.getElementById('ipAddress');
+        if (!ipEl) return;
+        const baseIp = '10.27.62.';
+        setInterval(() => {
+          const lastOctet = Math.floor(Math.random() * 254) + 1;
+          ipEl.textContent = baseIp + lastOctet;
+        }, 1800);
+      }
+
+      // 加载动画
+      function startLoader(callback) {
+        pageLoader.classList.add('active');
+        pageLoader.classList.remove('hidden');
+        let progress = 0;
+        loaderPercent.textContent = 'LOADING 0%';
+        if (loaderInterval) clearInterval(loaderInterval);
+        loaderInterval = setInterval(() => {
+          progress += Math.floor(Math.random() * 12) + 3;
+          if (progress >= 100) {
+            progress = 100;
+            clearInterval(loaderInterval);
+            loaderInterval = null;
+            loaderPercent.textContent = 'LOADING 100%';
+            setTimeout(() => {
+              pageLoader.classList.add('hidden');
+              setTimeout(() => {
+                pageLoader.classList.remove('active');
+              }, 600);
+              if (callback) callback();
+            }, 300);
+          } else {
+            loaderPercent.textContent = `LOADING ${progress}%`;
+          }
+        }, 90);
+      }
+
+      // 验证
+      function verifyPassword() {
+        const entered = passwordInput.value.trim();
+        if (entered === VALID_PASS) {
+          authError.textContent = '';
+          authLayer.style.display = 'none';
+          pageLoader.classList.add('active');
+          mainInterface.style.display = 'none';
+          startLoader(() => {
+            mainInterface.style.display = 'flex';
+            startIpAnimation();
+            setTimeout(() => {
+              initRadarCharts();
+            }, 100);
+          });
+        } else {
+          authError.textContent = 'ACCESS DENIED · INVALID PASSCODE';
+          passwordInput.value = '';
+          passwordInput.style.borderColor = '#b22222';
+          setTimeout(() => {
+            passwordInput.style.borderColor = '#3a3a3a';
+          }, 300);
+        }
+      }
+
+      authBtn.addEventListener('click', verifyPassword);
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') verifyPassword();
+      });
+
+      window.addEventListener('load', () => {
+        passwordInput.focus();
+        initTabs();
+      });
+
+      mainInterface.style.display = 'none';
+    })();
+  </script>
+</body>
+</html>
